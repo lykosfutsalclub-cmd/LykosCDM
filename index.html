@@ -84,6 +84,7 @@
       <button data-tab="planning" onclick="switchTab('planning')" class="tab-btn flex-1 py-2 text-[11px] font-bold uppercase tracking-wider rounded-lg transition">📅 Planning</button>
       <button data-tab="groupes" onclick="switchTab('groupes')" class="tab-btn flex-1 py-2 text-[11px] font-bold uppercase tracking-wider rounded-lg transition">📊 Groupes</button>
       <button data-tab="finale" onclick="switchTab('finale')" class="tab-btn flex-1 py-2 text-[11px] font-bold uppercase tracking-wider rounded-lg transition">🏆 Finale</button>
+      <button data-tab="equipe" onclick="switchTab('equipe')" class="tab-btn flex-1 py-2 text-[11px] font-bold uppercase tracking-wider rounded-lg transition">👤 Équipe</button>
     </div>
   </div>
 </header>
@@ -103,6 +104,13 @@
 
   <section id="view-finale" class="hidden fade-in space-y-3"></section>
 
+  <section id="view-equipe" class="hidden fade-in space-y-3">
+    <select id="select-equipe" onchange="renderEquipe()" class="w-full bg-navy-800 border border-navy-700 text-white rounded-lg px-3 py-3 font-bold text-base focus:outline-none focus:ring-1 focus:ring-pastis-500">
+      <option value="">-- Choisir une équipe --</option>
+    </select>
+    <div id="equipe-matches"></div>
+  </section>
+
   <p id="last-update" class="text-center text-[10px] text-gray-500 mt-8"></p>
 
 </main>
@@ -116,6 +124,7 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbwzD30O73F7rVq4Z2oSSJMV
 // puis utilise https://lh3.googleusercontent.com/d/TON_ID_FICHIER)
 const LOGO_LEFT_URL = 'https://lh3.googleusercontent.com/d/1Nf3045OYK-sjzYePgf_WzCkGV3dwrxy8';  // logo Lykos
 const LOGO_RIGHT_URL = 'https://lh3.googleusercontent.com/rd-d/ALs6j_FgjmA0rCzx_K7oHRKPxj4M98yICz3L-NYfmYLYxK65bWG2DHgSZk1eQmrcB16VmdhTaBoex5d6LB31SXIAiqXdvsT5qqNmQNTW6BNEL3e9JHfL-soU04P-7-8EwVosZr70TDeY7ewxyAcdTikIgzpOXGkFHqcSgaAAZ2SggsyKjFvEYRZlwI_51OHY4IGkMkPHqnqTftJdBx0_Vf7RLtqYfrJo6rUc4j6Y7QYkt2LsBoCIaGc5ABrl_UQ6p0Hbnlbb4_09pR6Gs0zi0JR7FzKpawd0ZkMA4aTu25mV1fXVi-cQQKEMOARmPia4fKbiMqizp0wD1lauwdWvPAgSawVRaZqG-jKNexGZTsPn6hAOuNpj-isZ1H56OwcYG52IbXqlpQFZiwKqUDugqW6gkGFtbmDIpj2T35nhLwF8vXQynbTEsVh2L53H-6Jn5liAwy7oxtsodnO0GjODoQeHXZUGC77gTDeK5wuaVUjTv0mgyR53h5yBCtShxf0xGSO5m9iNDCNZ_9XGh_cBpiC57JONrkKRM0b8qCbm0PGOKS9jvDsJ9Y4J_LeRrFqWBnwE9TQIZkttlD0E9rybUDh8cyJkJFAVWf6rgJc5ru-tM34xop1XTybgv3w-Fd_jGmn7jDm4PWn6QaYxLmp32iOOY_2N3Xko-X5iEL1B5fos5d-f9kdW3QvCaQxT-f6shFPvlN6CBr8Rne6noBPNIAktPxnfzbs9c90h4p_ab6Nb5TZjVsqGquriWYHD1yO9P9BNSawWlbb8tSqslBfa5dZMEoPYlPfp2nqySoENDzZ5XewAAf521vKqE_LJogQfqfaT4nH4K8N_u_zhSCf3QFmNJjfrcv3s7fQ67pvyUoBlNdbjKNtU2K98qX2aavu9nojUZXh_c5mR-olI0jXpvhJbqH9903EN4EQjEI1-YYj-IbjQmfOLAgRmXuNCylioESMyRQ8MUUO5PP9z8_OpBomtRwigjvpeVnvwTOZLyKH1Azj_JcY0uWBYhNxouYg8dI3bZkoeQOwOTRZmJy2fudEf_ns-hyw81qMRinIiEdkIAPxc28IR3CgUcrI-fXLoAGI7TWKh13Dgw1q2oBy0HzHv=s1600'; // logo du complexe futsal (Salon-de-Provence)
+
   let appData = { planning: [], groupes: {} };
   let currentTab = 'planning';
   let journeeMap = {};
@@ -199,7 +208,7 @@ const LOGO_RIGHT_URL = 'https://lh3.googleusercontent.com/rd-d/ALs6j_FgjmA0rCzx_
 
   function switchTab(tab) {
     currentTab = tab;
-    ['planning', 'groupes', 'finale'].forEach(t => {
+    ['planning', 'groupes', 'finale', 'equipe'].forEach(t => {
       document.getElementById('view-' + t).classList.toggle('hidden', t !== tab);
     });
     document.querySelectorAll('.tab-btn').forEach(b => {
@@ -211,11 +220,25 @@ const LOGO_RIGHT_URL = 'https://lh3.googleusercontent.com/rd-d/ALs6j_FgjmA0rCzx_
     });
   }
 
+  const TERRAIN_ORDER = { 'vélodrome': 1, 'velodrome': 1, 'anfield': 2, 'camp nou': 3 };
+  function terrainRank(nom) {
+    if (!nom) return 99;
+    const key = nom.toString().trim().toLowerCase();
+    return TERRAIN_ORDER[key] !== undefined ? TERRAIN_ORDER[key] : 99;
+  }
+  function compareMatches(a, b) {
+    const h = formatHeure(a.datetime).localeCompare(formatHeure(b.datetime));
+    if (h !== 0) return h;
+    return terrainRank(a.location) - terrainRank(b.location);
+  }
+
   function renderAll() {
     buildJourneeMap();
     renderPlanning();
     renderGroupes();
     renderFinale();
+    populateEquipeSelect();
+    renderEquipe();
   }
 
   // Le backend renvoie déjà "HH:mm" en texte propre — plus besoin de parser
@@ -287,7 +310,7 @@ const LOGO_RIGHT_URL = 'https://lh3.googleusercontent.com/rd-d/ALs6j_FgjmA0rCzx_
   function renderPlanning() {
     const el = document.getElementById('view-planning');
     if (!appData.planning.length) { el.innerHTML = '<p class="text-center text-gray-500 italic mt-10">Aucun match programmé.</p>'; return; }
-    const sorted = [...appData.planning].sort((a, b) => formatHeure(a.datetime).localeCompare(formatHeure(b.datetime)));
+    const sorted = [...appData.planning].sort(compareMatches);
     let lastHeure = '';
     let html = '';
     sorted.forEach(m => {
@@ -363,7 +386,7 @@ const LOGO_RIGHT_URL = 'https://lh3.googleusercontent.com/rd-d/ALs6j_FgjmA0rCzx_
     const matches = appData.planning.filter(m => m.phase);
     if (!matches.length) { el.innerHTML = "<p class=\"text-center text-gray-500 italic mt-10\">La phase finale n'est pas encore définie.</p>"; return; }
 
-    const sorted = [...matches].sort((a, b) => formatHeure(a.datetime).localeCompare(formatHeure(b.datetime)));
+    const sorted = [...matches].sort(compareMatches);
     let html = `<div class="text-center text-[11px] text-gray-400 bg-navy-800/60 border border-navy-700/50 rounded-lg px-3 py-2.5">
       🎉 Aucune équipe n'est éliminée après les poules — tout le monde continue en Quart, Barrage ou Demi conso.
     </div>`;
@@ -377,6 +400,66 @@ const LOGO_RIGHT_URL = 'https://lh3.googleusercontent.com/rd-d/ALs6j_FgjmA0rCzx_
       html += matchCard(m);
     });
     el.innerHTML = html;
+  }
+
+  // Onglet "Équipe" — calendrier complet d'une équipe (poules + phase finale)
+  function populateEquipeSelect() {
+    const sel = document.getElementById('select-equipe');
+    const groupes = appData.groupes || {};
+    let teams = [];
+    Object.values(groupes).forEach(list => list.forEach(t => teams.push(t.equipe)));
+    teams = [...new Set(teams)].sort((a, b) => a.localeCompare(b));
+    const current = sel.value;
+    sel.innerHTML = '<option value="">-- Choisir une équipe --</option>' +
+      teams.map(t => `<option value="${t}">${flag(t)} ${t}</option>`).join('');
+    if (teams.includes(current)) sel.value = current;
+  }
+
+  function renderEquipe() {
+    const team = document.getElementById('select-equipe').value;
+    const container = document.getElementById('equipe-matches');
+    if (!team) { container.innerHTML = '<p class="text-center text-gray-500 italic mt-10">Sélectionne une équipe pour voir son calendrier complet.</p>'; return; }
+
+    const matches = appData.planning.filter(m => m.home === team || m.away === team).sort(compareMatches);
+    if (!matches.length) { container.innerHTML = '<p class="text-center text-gray-500 italic mt-10">Aucun match trouvé pour cette équipe.</p>'; return; }
+    container.innerHTML = matches.map(m => equipeMatchCard(m, team)).join('');
+  }
+
+  function equipeMatchCard(m, team) {
+    const isHome = m.home === team;
+    const opponent = isHome ? m.away : m.home;
+    const ownScore = m.isPlayed ? (isHome ? m.scoreHome : m.scoreAway) : null;
+    const oppScore = m.isPlayed ? (isHome ? m.scoreAway : m.scoreHome) : null;
+    let resultCls = 'text-white';
+    if (m.isPlayed) {
+      if (ownScore > oppScore) resultCls = 'text-pastis-500';
+      else if (ownScore < oppScore) resultCls = 'text-gray-500';
+      else resultCls = 'text-gray-300';
+    }
+    const tc = terrainColor(m.location);
+    const phaseTag = m.phase
+      ? `<span class="inline-block text-[9px] font-black uppercase tracking-wider text-navy-900 bg-pastis-500 px-1.5 py-0.5 rounded mt-1">${m.phase}</span>` : '';
+    const scoreDisplay = m.isPlayed ? `${ownScore} - ${oppScore}` : '–';
+    const pending = (!m.homeResolved || !m.awayResolved)
+      ? `<div class="text-[10px] text-gray-500 italic mt-2">En attente des résultats précédents</div>` : '';
+
+    return `
+      <div class="card p-3 shadow-sm">
+        <div class="flex items-center justify-between gap-2 mb-2.5 pb-2.5 border-b border-white/10">
+          <span class="inline-flex items-center gap-1.5 text-pastis-500 font-oswald font-bold text-lg">🕐 ${formatHeure(m.datetime)}</span>
+          <span class="inline-flex items-center gap-1 text-[11px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full"
+                style="background:${tc}26;border:1px solid ${tc};color:${tc}">📍 ${m.location || ''}</span>
+        </div>
+        <div class="flex items-center justify-between gap-3">
+          <span class="flex items-center gap-2 text-[15px] font-bold text-white min-w-0">
+            <span class="text-xl flex-shrink-0">${flag(opponent)}</span>
+            <span class="break-words">vs ${opponent}</span>
+          </span>
+          <span class="flex-shrink-0 font-oswald font-black text-lg ${resultCls}">${scoreDisplay}</span>
+        </div>
+        ${phaseTag}${pending}
+      </div>
+    `;
   }
 </script>
 </body>
