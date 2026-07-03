@@ -168,35 +168,57 @@ const LOGO_RIGHT_URL = 'https://lh3.googleusercontent.com/rd-d/ALs6j_FgjmA0rCzx_
     return TERRAIN_PALETTE[h % TERRAIN_PALETTE.length];
   }
 
+  let pollTimer = null;
+  const POLL_INTERVAL_MS = 20000; // 20 secondes
+
   window.onload = () => {
     if (LOGO_LEFT_URL) { document.getElementById('logo-left').src = LOGO_LEFT_URL; document.getElementById('logo-left-wrap').classList.remove('hidden'); }
     if (LOGO_RIGHT_URL) { document.getElementById('logo-right').src = LOGO_RIGHT_URL; document.getElementById('logo-right-wrap').classList.remove('hidden'); }
-    fetchData();
+    fetchData(true);
+    setupPolling();
   };
 
-  function fetchData() {
+  // Si le téléphone se verrouille ou qu'on change d'appli, les navigateurs
+  // mettent les timers en pause. Dès qu'on revient sur la page, on force un
+  // rafraîchissement immédiat pour ne jamais afficher de données périmées.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      fetchData(false);
+      setupPolling();
+    }
+  });
+
+  function setupPolling() {
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(() => fetchData(false), POLL_INTERVAL_MS);
+  }
+
+  function fetchData(showLoader) {
     if (!API_URL) {
       showError("L'URL de l'API n'est pas configurée. Ouvre index.html et remplace API_URL par l'URL de ton déploiement Apps Script.");
       return;
     }
-    fetch(API_URL + '?t=' + Date.now())
+    if (showLoader) document.getElementById('loader').classList.remove('hidden');
+    // cache: 'no-store' évite qu'un navigateur mobile (Safari iOS en particulier)
+    // ne renvoie une ancienne réponse mise en cache au lieu d'interroger la Sheet.
+    fetch(API_URL + '?t=' + Date.now(), { cache: 'no-store' })
       .then(r => r.json())
       .then(data => {
-        if (data.error) { showError('Erreur côté script : ' + data.message); return; }
+        if (data.error) { if (showLoader) showError('Erreur côté script : ' + data.message); return; }
         appData = data;
         document.getElementById('loader').classList.add('hidden');
         document.getElementById('error-box').classList.add('hidden');
         renderAll();
         switchTab(currentTab);
         const d = new Date(data.updated);
-        document.getElementById('last-update').textContent = 'Dernière mise à jour : ' + d.toLocaleTimeString('fr-FR');
+        document.getElementById('last-update').textContent = '🔄 Mise à jour auto · dernière donnée : ' + d.toLocaleTimeString('fr-FR');
       })
-      .catch(err => showError('Impossible de contacter le tournoi. Vérifie ta connexion. (' + err.message + ')'));
+      .catch(err => { if (showLoader) showError('Impossible de contacter le tournoi. Vérifie ta connexion. (' + err.message + ')'); });
   }
 
   function refreshData() {
-    document.getElementById('loader').classList.remove('hidden');
-    fetchData();
+    fetchData(true);
+    setupPolling();
   }
 
   function showError(msg) {
