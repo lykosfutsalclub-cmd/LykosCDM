@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Lykos Cup — Tournoi 5x5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: { sans: ['Inter', 'sans-serif'], oswald: ['Oswald', 'sans-serif'] },
+        colors: {
+          navy: { 900: '#15203d', 800: '#212E55', 700: '#314376' },
+          pastis: { 500: '#F7D11A', 600: '#DFBC17' }
+        }
+      }
+    }
+  };
+</script>
+<style>
+  body { -webkit-tap-highlight-color: transparent; }
+  .card { background: #212E55; border: 1px solid #314376; border-radius: 0.75rem; }
+  .fade-in { animation: fadeIn .3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px);} to { opacity: 1; transform: none; } }
+  .loader { border: 4px solid #15203d; border-top: 4px solid #F7D11A; border-radius: 50%; width: 36px; height: 36px; animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body class="bg-navy-900 text-white font-sans antialiased min-h-screen">
+
+<header class="bg-navy-900/90 backdrop-blur-md border-b border-navy-700/50 sticky top-0 z-40 shadow-lg">
+  <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+    <h1 class="font-oswald font-bold uppercase tracking-wide text-lg md:text-xl">
+      <span class="text-pastis-500">Lykos</span> Cup <span class="text-xs md:text-sm text-gray-400 font-sans normal-case">— Tournoi 5x5</span>
+    </h1>
+    <button onclick="refreshData()" class="bg-pastis-500 hover:bg-pastis-600 text-navy-900 text-xs md:text-sm font-bold px-3 py-1.5 rounded shadow transition flex items-center gap-1.5">
+      🔄 <span class="hidden sm:inline">Actualiser</span>
+    </button>
+  </div>
+  <div class="max-w-4xl mx-auto px-4 pb-3">
+    <div class="flex bg-navy-900/60 rounded-xl p-1 shadow-inner border border-navy-700/50 gap-1">
+      <button data-tab="planning" onclick="switchTab('planning')" class="tab-btn flex-1 py-2 text-xs md:text-sm font-bold uppercase tracking-wider rounded-lg transition">📅 Planning</button>
+      <button data-tab="groupes" onclick="switchTab('groupes')" class="tab-btn flex-1 py-2 text-xs md:text-sm font-bold uppercase tracking-wider rounded-lg transition">📊 Groupes</button>
+      <button data-tab="finale" onclick="switchTab('finale')" class="tab-btn flex-1 py-2 text-xs md:text-sm font-bold uppercase tracking-wider rounded-lg transition">🏆 Phase finale</button>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-4xl mx-auto p-4 pb-16">
+
+  <div id="loader" class="flex flex-col items-center justify-center py-20">
+    <div class="loader mb-4"></div>
+    <p class="text-gray-400 text-sm">Chargement du tournoi...</p>
+  </div>
+
+  <div id="error-box" class="hidden bg-red-900/30 border border-red-700 text-red-200 text-sm p-4 rounded-xl"></div>
+
+  <section id="view-planning" class="hidden fade-in space-y-3"></section>
+
+  <section id="view-groupes" class="hidden fade-in space-y-6"></section>
+
+  <section id="view-finale" class="hidden fade-in space-y-6"></section>
+
+  <p id="last-update" class="text-center text-[10px] text-gray-500 mt-8"></p>
+
+</main>
+
+<script>
+  // ⚠️ Colle ici l'URL de ton Web App Apps Script (se termine par /exec)
+  const API_URL = 'https://script.google.com/macros/s/AKfycbwg4FYeB8E7whGmZDUA6JWPh5fx9jUKuT8zT3OcfLDlgxus9I497VgJxgYq0UvEeHsA7g/exec';
+
+  const PHASE_ORDER = [
+    'Quart principale',
+    'Barrage consolante',
+    'Classement',
+    'Demi principale 1',
+    'Demi principale 2',
+    'Demi conso 1',
+    'Demi conso 2',
+    'Classement conso',
+    'Finale conso',
+    'Petite finale conso',
+    'Finale',
+    'Petite finale'
+  ];
+
+  let appData = { planning: [], groupes: {} };
+  let currentTab = 'planning';
+
+  const FLAGS = {
+    'Italie': '🇮🇹', 'Allemagne': '🇩🇪', 'Portugal': '🇵🇹', 'France': '🇫🇷', 'Espagne': '🇪🇸',
+    'Belgique': '🇧🇪', 'Brésil': '🇧🇷', 'Pays-Bas': '🇳🇱', 'Maroc': '🇲🇦', 'Croatie': '🇭🇷',
+    'Colombie': '🇨🇴', 'Sénégal': '🇸🇳', 'Angleterre': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'Argentine': '🇦🇷'
+  };
+  function flag(nom) { return FLAGS[nom] ? FLAGS[nom] + ' ' : ''; }
+
+  // Légende "qui va où" après les poules — dépend du nombre d'équipes du groupe
+  const LEGENDES_GROUPE = {
+    5: "1er, 2e, 3e → Quarts de finale  ·  4e → Demi conso  ·  5e → Barrage consolante",
+    4: "1er, 2e → Quarts de finale  ·  3e, 4e → Barrage consolante"
+  };
+
+  window.onload = () => { fetchData(); };
+
+  function fetchData() {
+    if (!API_URL || API_URL.indexOf('COLLE_TON_URL') === 0) {
+      showError("L'URL de l'API n'est pas configurée. Ouvre index.html et remplace API_URL par l'URL de ton déploiement Apps Script.");
+      return;
+    }
+    fetch(API_URL + '?t=' + Date.now())
+      .then(r => r.json())
+      .then(data => {
+        if (data.error) { showError('Erreur côté script : ' + data.message); return; }
+        appData = data;
+        document.getElementById('loader').classList.add('hidden');
+        document.getElementById('error-box').classList.add('hidden');
+        renderAll();
+        switchTab(currentTab);
+        const d = new Date(data.updated);
+        document.getElementById('last-update').textContent = 'Dernière mise à jour : ' + d.toLocaleTimeString('fr-FR');
+      })
+      .catch(err => showError('Impossible de contacter le tournoi. Vérifie ta connexion. (' + err.message + ')'));
+  }
+
+  function refreshData() {
+    document.getElementById('loader').classList.remove('hidden');
+    fetchData();
+  }
+
+  function showError(msg) {
+    document.getElementById('loader').classList.add('hidden');
+    const box = document.getElementById('error-box');
+    box.textContent = msg;
+    box.classList.remove('hidden');
+  }
+
+  function switchTab(tab) {
+    currentTab = tab;
+    ['planning', 'groupes', 'finale'].forEach(t => {
+      document.getElementById('view-' + t).classList.toggle('hidden', t !== tab);
+    });
+    document.querySelectorAll('.tab-btn').forEach(b => {
+      const active = b.dataset.tab === tab;
+      b.classList.toggle('bg-pastis-500', active);
+      b.classList.toggle('text-navy-900', active);
+      b.classList.toggle('font-black', active);
+      b.classList.toggle('text-gray-400', !active);
+    });
+  }
+
+  function renderAll() {
+    renderPlanning();
+    renderGroupes();
+    renderFinale();
+  }
+
+  function formatHeure(dt) {
+    if (!dt) return '';
+    if (dt.indexOf('T') !== -1) {
+      const d = new Date(dt);
+      return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    }
+    return dt.toString().slice(0, 5);
+  }
+
+  function matchWinner(m) {
+    if (!m.isPlayed) return null;
+    if (m.scoreHome > m.scoreAway) return 'home';
+    if (m.scoreHome < m.scoreAway) return 'away';
+    if (m.tab) return (m.tab === m.home) ? 'home' : (m.tab === m.away ? 'away' : null);
+    return null;
+  }
+
+  function matchCard(m) {
+    const win = matchWinner(m);
+    const clsHome = win === 'home' ? 'text-white font-black' : (win === 'away' ? 'text-gray-500' : 'text-white font-bold');
+    const clsAway = win === 'away' ? 'text-white font-black' : (win === 'home' ? 'text-gray-500' : 'text-white font-bold');
+    const score = m.isPlayed
+      ? `<div class="bg-pastis-500 text-navy-900 font-black font-oswald px-3 py-1 rounded text-sm md:text-base">${m.scoreHome} - ${m.scoreAway}</div>`
+      : `<div class="bg-navy-700 text-gray-300 font-bold font-oswald px-3 py-1 rounded text-sm md:text-base">VS</div>`;
+    const tabTag = (m.isPlayed && m.scoreHome === m.scoreAway && m.tab)
+      ? `<div class="text-[9px] text-pastis-500 uppercase font-bold mt-1">TAB : ${m.tab}</div>` : '';
+    const pending = (!m.homeResolved || !m.awayResolved) ? `<div class="text-[9px] text-gray-500 italic mt-1">En attente des résultats précédents</div>` : '';
+
+    return `
+      <div class="card p-3 flex items-center justify-between shadow-sm">
+        <div class="flex flex-col text-[10px] text-gray-400 uppercase font-bold w-14 flex-shrink-0">
+          <span class="text-pastis-500 text-sm font-oswald">${formatHeure(m.datetime)}</span>
+          <span class="truncate">${m.location || ''}</span>
+        </div>
+        <div class="flex-1 flex items-center justify-center gap-2 md:gap-4 px-2 min-w-0">
+          <span class="flex-1 text-right text-xs md:text-base truncate ${clsHome}">${flag(m.home)}${m.home}</span>
+          <div class="flex flex-col items-center flex-shrink-0">${score}${tabTag}</div>
+          <span class="flex-1 text-left text-xs md:text-base truncate ${clsAway}">${flag(m.away)}${m.away}</span>
+        </div>
+        <div class="w-14 flex-shrink-0 text-right">${pending}</div>
+      </div>
+    `;
+  }
+
+  function renderPlanning() {
+    const el = document.getElementById('view-planning');
+    if (!appData.planning.length) { el.innerHTML = '<p class="text-center text-gray-500 italic mt-10">Aucun match programmé.</p>'; return; }
+    const sorted = [...appData.planning].sort((a, b) => formatHeure(a.datetime).localeCompare(formatHeure(b.datetime)));
+    let lastHeure = '';
+    let html = '';
+    sorted.forEach(m => {
+      const h = formatHeure(m.datetime);
+      if (h !== lastHeure) {
+        html += `<div class="text-pastis-500 font-oswald font-bold uppercase tracking-wide text-sm mt-4 mb-1 border-b border-navy-700 pb-1">${h}</div>`;
+        lastHeure = h;
+      }
+      html += matchCard(m);
+    });
+    el.innerHTML = html;
+  }
+
+  function renderGroupes() {
+    const el = document.getElementById('view-groupes');
+    const groupes = appData.groupes || {};
+    const noms = Object.keys(groupes).sort();
+    if (!noms.length) { el.innerHTML = '<p class="text-center text-gray-500 italic mt-10">Aucun groupe défini.</p>'; return; }
+
+    let html = '';
+    noms.forEach(g => {
+      const teams = groupes[g];
+      const nbEquipes = teams.length;
+      const nbQualifQuart = nbEquipes === 5 ? 3 : 2; // top-3 si groupe de 5, top-2 si groupe de 4
+      html += `
+        <div class="card overflow-hidden shadow-lg">
+          <div class="bg-navy-900 py-2 px-4 border-b border-navy-700 font-oswald font-bold uppercase tracking-wide">Groupe ${g}</div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-center text-xs md:text-sm whitespace-nowrap">
+              <thead class="bg-navy-900/50 text-gray-400">
+                <tr>
+                  <th class="py-2 pl-3 text-left">#</th>
+                  <th class="py-2 text-left">Équipe</th>
+                  <th class="py-2 text-pastis-500">Pts</th>
+                  <th class="py-2">J</th><th class="py-2">G</th><th class="py-2">N</th><th class="py-2">P</th>
+                  <th class="py-2">BP</th><th class="py-2">BC</th><th class="py-2 pr-3">Diff</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-navy-700">
+                ${teams.map((t, i) => {
+                  const diff = t.bp - t.bc;
+                  const diffCls = diff > 0 ? 'text-green-400' : (diff < 0 ? 'text-red-400' : 'text-gray-400');
+                  const rowCls = i < nbQualifQuart ? 'border-l-4 border-green-500 bg-green-900/10' : 'border-l-4 border-pastis-500/60 bg-pastis-500/5';
+                  return `<tr class="hover:bg-navy-700 transition ${rowCls}">
+                    <td class="py-2 pl-3 text-left text-gray-400">${t.rang}</td>
+                    <td class="py-2 text-left font-bold">${flag(t.equipe)}${t.equipe}</td>
+                    <td class="py-2 font-black text-pastis-500">${t.pts}</td>
+                    <td class="py-2 text-gray-400">${t.j}</td>
+                    <td class="py-2 text-gray-400">${t.g}</td>
+                    <td class="py-2 text-gray-400">${t.n}</td>
+                    <td class="py-2 text-gray-400">${t.p}</td>
+                    <td class="py-2 text-gray-400">${t.bp}</td>
+                    <td class="py-2 text-gray-400">${t.bc}</td>
+                    <td class="py-2 pr-3 font-bold ${diffCls}">${diff > 0 ? '+' + diff : diff}</td>
+                  </tr>`;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+          <div class="px-4 py-2 bg-navy-900/40 text-[10px] md:text-xs text-gray-400 border-t border-navy-700/50">
+            ${LEGENDES_GROUPE[nbEquipes] || ''}
+          </div>
+        </div>
+      `;
+    });
+    el.innerHTML = html;
+  }
+
+  function renderFinale() {
+    const el = document.getElementById('view-finale');
+    const matches = appData.planning.filter(m => m.phase);
+    if (!matches.length) { el.innerHTML = "<p class=\"text-center text-gray-500 italic mt-10\">La phase finale n'est pas encore définie.</p>"; return; }
+
+    let html = `<div class="text-center text-[10px] md:text-xs text-gray-400 bg-navy-800/60 border border-navy-700/50 rounded-lg px-3 py-2">
+      🎉 Aucune équipe n'est éliminée après les poules — tout le monde continue en Quart, Barrage ou Demi conso.
+    </div>`;
+    PHASE_ORDER.forEach(phase => {
+      const ms = matches.filter(m => m.phase === phase).sort((a, b) => formatHeure(a.datetime).localeCompare(formatHeure(b.datetime)));
+      if (!ms.length) return;
+      html += `<div>
+        <h3 class="font-oswald font-bold uppercase tracking-wide text-sm text-gray-300 mb-2 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-pastis-500"></span> ${phase}
+        </h3>
+        <div class="space-y-2">${ms.map(matchCard).join('')}</div>
+      </div>`;
+    });
+    el.innerHTML = html || '<p class="text-center text-gray-500 italic mt-10">Aucun match de phase finale pour le moment.</p>';
+  }
+</script>
+</body>
+</html>
