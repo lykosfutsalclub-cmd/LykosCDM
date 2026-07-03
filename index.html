@@ -57,22 +57,22 @@
   @keyframes fadeIn { from { opacity: 0; transform: translateY(4px);} to { opacity: 1; transform: none; } }
   .loader { border: 4px solid #0F3320; border-top: 4px solid #E7B448; border-radius: 50%; width: 36px; height: 36px; animation: spin 1s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .logo-img { display: none; }
-  .logo-img.loaded { display: block; }
 </style>
 </head>
 <body class="bg-navy-900 text-white font-sans antialiased min-h-screen">
 
 <header class="bg-navy-900/90 backdrop-blur-md border-b border-navy-700/50 sticky top-0 z-40 shadow-lg">
   <div class="max-w-lg mx-auto px-3 pt-3 pb-2 flex items-center justify-between gap-2">
-    <img id="logo-left" class="logo-img h-10 w-10 object-contain rounded-lg flex-shrink-0" alt="Logo Lykos"
-         onload="this.classList.add('loaded')" onerror="this.style.display='none'">
+    <div id="logo-left-wrap" class="hidden flex-shrink-0 w-12 h-12 rounded-xl bg-white flex items-center justify-center shadow p-1.5">
+      <img id="logo-left" class="w-full h-full object-contain" alt="Logo Lykos">
+    </div>
     <h1 class="flex-1 text-center font-oswald font-black uppercase tracking-wide leading-tight">
       <span class="block text-pastis-500 text-base">🏆 Coupe du Monde</span>
       <span class="block text-white text-sm">Foot 5</span>
     </h1>
-    <img id="logo-right" class="logo-img h-10 w-10 object-contain rounded-lg flex-shrink-0" alt="Logo complexe"
-         onload="this.classList.add('loaded')" onerror="this.style.display='none'">
+    <div id="logo-right-wrap" class="hidden flex-shrink-0 w-12 h-12 rounded-xl bg-white flex items-center justify-center shadow p-1.5">
+      <img id="logo-right" class="w-full h-full object-contain" alt="Logo complexe">
+    </div>
   </div>
   <div class="max-w-lg mx-auto px-3 pb-2 flex justify-center">
     <button onclick="refreshData()" class="bg-pastis-500 hover:bg-pastis-600 text-navy-900 text-xs font-bold px-3 py-1.5 rounded-full shadow transition flex items-center gap-1.5">
@@ -108,17 +108,25 @@
 </main>
 
 <script>
-  // ⚠️ Colle ici l'URL de ton Web App Apps Script (se termine par /exec)
-  const API_URL = 'https://script.google.com/macros/s/AKfycbwzD30O73F7rVq4Z2oSSJMVEmPJcc3AkaPfNo6jN5egnxeLwQJowxMNYWbhLzA7AXhX8w/exec';
+// ⚠️ Colle ici l'URL de ton Web App Apps Script (se termine par /exec)
+const API_URL = 'https://script.google.com/macros/s/AKfycbwzD30O73F7rVq4Z2oSSJMVEmPJcc3AkaPfNo6jN5egnxeLwQJowxMNYWbhLzA7AXhX8w/exec';
 
-  // ⚠️ Colle ici tes URLs de logos (même méthode que sur Pastis Pronos :
-  // héberge l'image sur Google Drive, partage "Tout le monde avec le lien",
-  // puis utilise https://lh3.googleusercontent.com/d/TON_ID_FICHIER)
-  const LOGO_LEFT_URL = 'https://lh3.googleusercontent.com/d/1Nf3045OYK-sjzYePgf_WzCkGV3dwrxy8';  // logo Lykos
-  const LOGO_RIGHT_URL = 'https://lh3.googleusercontent.com/rd-d/ALs6j_FgjmA0rCzx_K7oHRKPxj4M98yICz3L-NYfmYLYxK65bWG2DHgSZk1eQmrcB16VmdhTaBoex5d6LB31SXIAiqXdvsT5qqNmQNTW6BNEL3e9JHfL-soU04P-7-8EwVosZr70TDeY7ewxyAcdTikIgzpOXGkFHqcSgaAAZ2SggsyKjFvEYRZlwI_51OHY4IGkMkPHqnqTftJdBx0_Vf7RLtqYfrJo6rUc4j6Y7QYkt2LsBoCIaGc5ABrl_UQ6p0Hbnlbb4_09pR6Gs0zi0JR7FzKpawd0ZkMA4aTu25mV1fXVi-cQQKEMOARmPia4fKbiMqizp0wD1lauwdWvPAgSawVRaZqG-jKNexGZTsPn6hAOuNpj-isZ1H56OwcYG52IbXqlpQFZiwKqUDugqW6gkGFtbmDIpj2T35nhLwF8vXQynbTEsVh2L53H-6Jn5liAwy7oxtsodnO0GjODoQeHXZUGC77gTDeK5wuaVUjTv0mgyR53h5yBCtShxf0xGSO5m9iNDCNZ_9XGh_cBpiC57JONrkKRM0b8qCbm0PGOKS9jvDsJ9Y4J_LeRrFqWBnwE9TQIZkttlD0E9rybUDh8cyJkJFAVWf6rgJc5ru-tM34xop1XTybgv3w-Fd_jGmn7jDm4PWn6QaYxLmp32iOOY_2N3Xko-X5iEL1B5fos5d-f9kdW3QvCaQxT-f6shFPvlN6CBr8Rne6noBPNIAktPxnfzbs9c90h4p_ab6Nb5TZjVsqGquriWYHD1yO9P9BNSawWlbb8tSqslBfa5dZMEoPYlPfp2nqySoENDzZ5XewAAf521vKqE_LJogQfqfaT4nH4K8N_u_zhSCf3QFmNJjfrcv3s7fQ67pvyUoBlNdbjKNtU2K98qX2aavu9nojUZXh_c5mR-olI0jXpvhJbqH9903EN4EQjEI1-YYj-IbjQmfOLAgRmXuNCylioESMyRQ8MUUO5PP9z8_OpBomtRwigjvpeVnvwTOZLyKH1Azj_JcY0uWBYhNxouYg8dI3bZkoeQOwOTRZmJy2fudEf_ns-hyw81qMRinIiEdkIAPxc28IR3CgUcrI-fXLoAGI7TWKh13Dgw1q2oBy0HzHv=s1600'; // logo du complexe futsal (Salon-de-Provence)
-
+// ⚠️ Colle ici tes URLs de logos (même méthode que sur Pastis Pronos :
+// héberge l'image sur Google Drive, partage "Tout le monde avec le lien",
+// puis utilise https://lh3.googleusercontent.com/d/TON_ID_FICHIER)
+const LOGO_LEFT_URL = 'https://lh3.googleusercontent.com/d/1Nf3045OYK-sjzYePgf_WzCkGV3dwrxy8';  // logo Lykos
+const LOGO_RIGHT_URL = 'https://lh3.googleusercontent.com/rd-d/ALs6j_FgjmA0rCzx_K7oHRKPxj4M98yICz3L-NYfmYLYxK65bWG2DHgSZk1eQmrcB16VmdhTaBoex5d6LB31SXIAiqXdvsT5qqNmQNTW6BNEL3e9JHfL-soU04P-7-8EwVosZr70TDeY7ewxyAcdTikIgzpOXGkFHqcSgaAAZ2SggsyKjFvEYRZlwI_51OHY4IGkMkPHqnqTftJdBx0_Vf7RLtqYfrJo6rUc4j6Y7QYkt2LsBoCIaGc5ABrl_UQ6p0Hbnlbb4_09pR6Gs0zi0JR7FzKpawd0ZkMA4aTu25mV1fXVi-cQQKEMOARmPia4fKbiMqizp0wD1lauwdWvPAgSawVRaZqG-jKNexGZTsPn6hAOuNpj-isZ1H56OwcYG52IbXqlpQFZiwKqUDugqW6gkGFtbmDIpj2T35nhLwF8vXQynbTEsVh2L53H-6Jn5liAwy7oxtsodnO0GjODoQeHXZUGC77gTDeK5wuaVUjTv0mgyR53h5yBCtShxf0xGSO5m9iNDCNZ_9XGh_cBpiC57JONrkKRM0b8qCbm0PGOKS9jvDsJ9Y4J_LeRrFqWBnwE9TQIZkttlD0E9rybUDh8cyJkJFAVWf6rgJc5ru-tM34xop1XTybgv3w-Fd_jGmn7jDm4PWn6QaYxLmp32iOOY_2N3Xko-X5iEL1B5fos5d-f9kdW3QvCaQxT-f6shFPvlN6CBr8Rne6noBPNIAktPxnfzbs9c90h4p_ab6Nb5TZjVsqGquriWYHD1yO9P9BNSawWlbb8tSqslBfa5dZMEoPYlPfp2nqySoENDzZ5XewAAf521vKqE_LJogQfqfaT4nH4K8N_u_zhSCf3QFmNJjfrcv3s7fQ67pvyUoBlNdbjKNtU2K98qX2aavu9nojUZXh_c5mR-olI0jXpvhJbqH9903EN4EQjEI1-YYj-IbjQmfOLAgRmXuNCylioESMyRQ8MUUO5PP9z8_OpBomtRwigjvpeVnvwTOZLyKH1Azj_JcY0uWBYhNxouYg8dI3bZkoeQOwOTRZmJy2fudEf_ns-hyw81qMRinIiEdkIAPxc28IR3CgUcrI-fXLoAGI7TWKh13Dgw1q2oBy0HzHv=s1600'; // logo du complexe futsal (Salon-de-Provence)
   let appData = { planning: [], groupes: {} };
   let currentTab = 'planning';
+  let journeeMap = {};
+
+  function buildJourneeMap() {
+    journeeMap = {};
+    const times = [...new Set(appData.planning.map(m => formatHeure(m.datetime)))]
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b));
+    times.forEach((t, i) => { journeeMap[t] = i + 1; });
+  }
 
   const FLAGS = {
     'Italie': '🇮🇹', 'Allemagne': '🇩🇪', 'Portugal': '🇵🇹', 'France': '🇫🇷', 'Espagne': '🇪🇸',
@@ -133,18 +141,27 @@
     4: "1er, 2e → Quarts de finale · 3e, 4e → Barrage consolante"
   };
 
-  // Couleur stable par terrain (peu importe le nombre de terrains utilisés)
-  const TERRAIN_PALETTE = ['#4FA3D1', '#E8834B', '#9B6BD1', '#4BBF8C', '#D14F8C', '#6B8ED1'];
+  // Couleurs fixes pour les terrains connus (identité visuelle voulue),
+  // et palette de secours si un nouveau terrain est ajouté plus tard.
+  const TERRAIN_COLORS_FIXED = {
+    'anfield': '#C8102E',      // rouge Liverpool
+    'vélodrome': '#3FA9E0',    // bleu ciel OM
+    'velodrome': '#3FA9E0',
+    'camp nou': '#FFD400'      // jaune catalan
+  };
+  const TERRAIN_PALETTE = ['#9B6BD1', '#4BBF8C', '#D14F8C', '#6B8ED1', '#E8834B'];
   function terrainColor(nom) {
     if (!nom) return TERRAIN_PALETTE[0];
+    const key = nom.toString().trim().toLowerCase();
+    if (TERRAIN_COLORS_FIXED[key]) return TERRAIN_COLORS_FIXED[key];
     let h = 0;
     for (let i = 0; i < nom.length; i++) h = (h * 31 + nom.charCodeAt(i)) >>> 0;
     return TERRAIN_PALETTE[h % TERRAIN_PALETTE.length];
   }
 
   window.onload = () => {
-    if (LOGO_LEFT_URL) document.getElementById('logo-left').src = LOGO_LEFT_URL;
-    if (LOGO_RIGHT_URL) document.getElementById('logo-right').src = LOGO_RIGHT_URL;
+    if (LOGO_LEFT_URL) { document.getElementById('logo-left').src = LOGO_LEFT_URL; document.getElementById('logo-left-wrap').classList.remove('hidden'); }
+    if (LOGO_RIGHT_URL) { document.getElementById('logo-right').src = LOGO_RIGHT_URL; document.getElementById('logo-right-wrap').classList.remove('hidden'); }
     fetchData();
   };
 
@@ -195,6 +212,7 @@
   }
 
   function renderAll() {
+    buildJourneeMap();
     renderPlanning();
     renderGroupes();
     renderFinale();
@@ -275,7 +293,7 @@
     sorted.forEach(m => {
       const h = formatHeure(m.datetime);
       if (h !== lastHeure) {
-        html += `<div class="text-pastis-500 font-oswald font-black uppercase tracking-wide text-base mt-5 mb-2 border-b border-navy-700 pb-1">🕐 ${h}</div>`;
+        html += `<div class="text-pastis-500 font-oswald font-black uppercase tracking-wide text-base mt-5 mb-2 border-b border-navy-700 pb-1">Journée ${journeeMap[h] || ''}</div>`;
         lastHeure = h;
       }
       html += matchCard(m);
@@ -353,7 +371,7 @@
     sorted.forEach(m => {
       const h = formatHeure(m.datetime);
       if (h !== lastHeure) {
-        html += `<div class="text-pastis-500 font-oswald font-black uppercase tracking-wide text-base mt-5 mb-2 border-b border-navy-700 pb-1">🕐 ${h}</div>`;
+        html += `<div class="text-pastis-500 font-oswald font-black uppercase tracking-wide text-base mt-5 mb-2 border-b border-navy-700 pb-1">Journée ${journeeMap[h] || ''}</div>`;
         lastHeure = h;
       }
       html += matchCard(m);
