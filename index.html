@@ -109,13 +109,13 @@
 
 <script>
   // ⚠️ Colle ici l'URL de ton Web App Apps Script (se termine par /exec)
-  const API_URL = 'https://script.google.com/macros/s/AKfycbwg4FYeB8E7whGmZDUA6JWPh5fx9jUKuT8zT3OcfLDlgxus9I497VgJxgYq0UvEeHsA7g/exec';
+  const API_URL = 'https://script.google.com/macros/s/AKfycbwzD30O73F7rVq4Z2oSSJMVEmPJcc3AkaPfNo6jN5egnxeLwQJowxMNYWbhLzA7AXhX8w/exec';
 
   // ⚠️ Colle ici tes URLs de logos (même méthode que sur Pastis Pronos :
   // héberge l'image sur Google Drive, partage "Tout le monde avec le lien",
   // puis utilise https://lh3.googleusercontent.com/d/TON_ID_FICHIER)
-  const LOGO_LEFT_URL = '';  // logo Lykos
-  const LOGO_RIGHT_URL = ''; // logo du complexe futsal (Salon-de-Provence)
+  const LOGO_LEFT_URL = 'https://lh3.googleusercontent.com/d/1Nf3045OYK-sjzYePgf_WzCkGV3dwrxy8';  // logo Lykos
+  const LOGO_RIGHT_URL = 'https://lh3.googleusercontent.com/rd-d/ALs6j_FgjmA0rCzx_K7oHRKPxj4M98yICz3L-NYfmYLYxK65bWG2DHgSZk1eQmrcB16VmdhTaBoex5d6LB31SXIAiqXdvsT5qqNmQNTW6BNEL3e9JHfL-soU04P-7-8EwVosZr70TDeY7ewxyAcdTikIgzpOXGkFHqcSgaAAZ2SggsyKjFvEYRZlwI_51OHY4IGkMkPHqnqTftJdBx0_Vf7RLtqYfrJo6rUc4j6Y7QYkt2LsBoCIaGc5ABrl_UQ6p0Hbnlbb4_09pR6Gs0zi0JR7FzKpawd0ZkMA4aTu25mV1fXVi-cQQKEMOARmPia4fKbiMqizp0wD1lauwdWvPAgSawVRaZqG-jKNexGZTsPn6hAOuNpj-isZ1H56OwcYG52IbXqlpQFZiwKqUDugqW6gkGFtbmDIpj2T35nhLwF8vXQynbTEsVh2L53H-6Jn5liAwy7oxtsodnO0GjODoQeHXZUGC77gTDeK5wuaVUjTv0mgyR53h5yBCtShxf0xGSO5m9iNDCNZ_9XGh_cBpiC57JONrkKRM0b8qCbm0PGOKS9jvDsJ9Y4J_LeRrFqWBnwE9TQIZkttlD0E9rybUDh8cyJkJFAVWf6rgJc5ru-tM34xop1XTybgv3w-Fd_jGmn7jDm4PWn6QaYxLmp32iOOY_2N3Xko-X5iEL1B5fos5d-f9kdW3QvCaQxT-f6shFPvlN6CBr8Rne6noBPNIAktPxnfzbs9c90h4p_ab6Nb5TZjVsqGquriWYHD1yO9P9BNSawWlbb8tSqslBfa5dZMEoPYlPfp2nqySoENDzZ5XewAAf521vKqE_LJogQfqfaT4nH4K8N_u_zhSCf3QFmNJjfrcv3s7fQ67pvyUoBlNdbjKNtU2K98qX2aavu9nojUZXh_c5mR-olI0jXpvhJbqH9903EN4EQjEI1-YYj-IbjQmfOLAgRmXuNCylioESMyRQ8MUUO5PP9z8_OpBomtRwigjvpeVnvwTOZLyKH1Azj_JcY0uWBYhNxouYg8dI3bZkoeQOwOTRZmJy2fudEf_ns-hyw81qMRinIiEdkIAPxc28IR3CgUcrI-fXLoAGI7TWKh13Dgw1q2oBy0HzHv=s1600'; // logo du complexe futsal (Salon-de-Provence)
 
   let appData = { planning: [], groupes: {} };
   let currentTab = 'planning';
