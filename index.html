@@ -98,11 +98,20 @@
 
   <div id="error-box" class="hidden bg-red-900/30 border border-red-700 text-red-200 text-sm p-4 rounded-xl"></div>
 
+  <div id="retard-banner" class="hidden text-center text-[11px] text-navy-900 bg-pastis-500 font-bold rounded-lg px-3 py-2 mb-3"></div>
+
   <section id="view-planning" class="hidden fade-in space-y-3"></section>
 
   <section id="view-groupes" class="hidden fade-in space-y-5"></section>
 
-  <section id="view-finale" class="hidden fade-in space-y-3"></section>
+  <section id="view-finale" class="hidden fade-in space-y-3">
+    <div class="flex bg-navy-900/60 rounded-xl p-1 shadow-inner border border-navy-700/50 gap-1">
+      <button data-finale-view="chrono" onclick="switchFinaleView('chrono')" class="finale-view-btn flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg transition">🕐 Chronologique</button>
+      <button data-finale-view="tableau" onclick="switchFinaleView('tableau')" class="finale-view-btn flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg transition">🏆 Tableau</button>
+    </div>
+    <div id="finale-chrono" class="space-y-3"></div>
+    <div id="finale-tableau" class="hidden"></div>
+  </section>
 
   <section id="view-equipe" class="hidden fade-in space-y-3">
     <select id="select-equipe" onchange="renderEquipe()" class="w-full bg-navy-800 border border-navy-700 text-white rounded-lg px-3 py-3 font-bold text-base focus:outline-none focus:ring-1 focus:ring-pastis-500">
@@ -116,14 +125,14 @@
 </main>
 
 <script>
-// ⚠️ Colle ici l'URL de ton Web App Apps Script (se termine par /exec)
-const API_URL = 'https://script.google.com/macros/s/AKfycbw-stEBU968EXh38SxefJCJlLDMuJpOKbk_fGMuXMPP3fGX7xln5wPCrpwPHPaM9tNNcA/exec';
+  // ⚠️ Colle ici l'URL de ton Web App Apps Script (se termine par /exec)
+  const API_URL = 'https://script.google.com/macros/s/AKfycbwg4FYeB8E7whGmZDUA6JWPh5fx9jUKuT8zT3OcfLDlgxus9I497VgJxgYq0UvEeHsA7g/exec';
 
-// ⚠️ Colle ici tes URLs de logos (même méthode que sur Pastis Pronos :
-// héberge l'image sur Google Drive, partage "Tout le monde avec le lien",
-// puis utilise https://lh3.googleusercontent.com/d/TON_ID_FICHIER)
-const LOGO_LEFT_URL = 'https://lh3.googleusercontent.com/d/1Nf3045OYK-sjzYePgf_WzCkGV3dwrxy8';  // logo Lykos
-const LOGO_RIGHT_URL = 'https://lh3.googleusercontent.com/rd-d/ALs6j_FgjmA0rCzx_K7oHRKPxj4M98yICz3L-NYfmYLYxK65bWG2DHgSZk1eQmrcB16VmdhTaBoex5d6LB31SXIAiqXdvsT5qqNmQNTW6BNEL3e9JHfL-soU04P-7-8EwVosZr70TDeY7ewxyAcdTikIgzpOXGkFHqcSgaAAZ2SggsyKjFvEYRZlwI_51OHY4IGkMkPHqnqTftJdBx0_Vf7RLtqYfrJo6rUc4j6Y7QYkt2LsBoCIaGc5ABrl_UQ6p0Hbnlbb4_09pR6Gs0zi0JR7FzKpawd0ZkMA4aTu25mV1fXVi-cQQKEMOARmPia4fKbiMqizp0wD1lauwdWvPAgSawVRaZqG-jKNexGZTsPn6hAOuNpj-isZ1H56OwcYG52IbXqlpQFZiwKqUDugqW6gkGFtbmDIpj2T35nhLwF8vXQynbTEsVh2L53H-6Jn5liAwy7oxtsodnO0GjODoQeHXZUGC77gTDeK5wuaVUjTv0mgyR53h5yBCtShxf0xGSO5m9iNDCNZ_9XGh_cBpiC57JONrkKRM0b8qCbm0PGOKS9jvDsJ9Y4J_LeRrFqWBnwE9TQIZkttlD0E9rybUDh8cyJkJFAVWf6rgJc5ru-tM34xop1XTybgv3w-Fd_jGmn7jDm4PWn6QaYxLmp32iOOY_2N3Xko-X5iEL1B5fos5d-f9kdW3QvCaQxT-f6shFPvlN6CBr8Rne6noBPNIAktPxnfzbs9c90h4p_ab6Nb5TZjVsqGquriWYHD1yO9P9BNSawWlbb8tSqslBfa5dZMEoPYlPfp2nqySoENDzZ5XewAAf521vKqE_LJogQfqfaT4nH4K8N_u_zhSCf3QFmNJjfrcv3s7fQ67pvyUoBlNdbjKNtU2K98qX2aavu9nojUZXh_c5mR-olI0jXpvhJbqH9903EN4EQjEI1-YYj-IbjQmfOLAgRmXuNCylioESMyRQ8MUUO5PP9z8_OpBomtRwigjvpeVnvwTOZLyKH1Azj_JcY0uWBYhNxouYg8dI3bZkoeQOwOTRZmJy2fudEf_ns-hyw81qMRinIiEdkIAPxc28IR3CgUcrI-fXLoAGI7TWKh13Dgw1q2oBy0HzHv=s1600'; // logo du complexe futsal (Salon-de-Provence)
+  // ⚠️ Colle ici tes URLs de logos (même méthode que sur Pastis Pronos :
+  // héberge l'image sur Google Drive, partage "Tout le monde avec le lien",
+  // puis utilise https://lh3.googleusercontent.com/d/TON_ID_FICHIER)
+  const LOGO_LEFT_URL = '';  // logo Lykos
+  const LOGO_RIGHT_URL = ''; // logo du complexe futsal (Salon-de-Provence)
 
   let appData = { planning: [], groupes: {} };
   let currentTab = 'planning';
@@ -146,8 +155,8 @@ const LOGO_RIGHT_URL = 'https://lh3.googleusercontent.com/rd-d/ALs6j_FgjmA0rCzx_
 
   // Légende "qui va où" après les poules — dépend du nombre d'équipes du groupe
   const LEGENDES_GROUPE = {
-    5: "1er, 2e et les deux meilleurs 3e → Quarts de finale · Dernier 3e, 4e, 5e → Tableau consolante",
-    4: "1er, 2e et les deux meilleurs 3e → Quarts de finale · Dernier 3e, 4e → Tableau consolante"
+    5: "1er, 2e, 3e → Quarts de finale · 4e → Demi conso · 5e → Barrage consolante",
+    4: "1er, 2e → Quarts de finale · 3e, 4e → Barrage consolante"
   };
 
   // Couleurs fixes pour les terrains connus (identité visuelle voulue),
@@ -210,6 +219,13 @@ const LOGO_RIGHT_URL = 'https://lh3.googleusercontent.com/rd-d/ALs6j_FgjmA0rCzx_
         document.getElementById('error-box').classList.add('hidden');
         renderAll();
         switchTab(currentTab);
+        const banner = document.getElementById('retard-banner');
+        if (data.retardMinutes > 0) {
+          banner.textContent = '⏱️ Retard actuel : +' + data.retardMinutes + ' min (horaires à venir décalés en conséquence)';
+          banner.classList.remove('hidden');
+        } else {
+          banner.classList.add('hidden');
+        }
         const d = new Date(data.updated);
         document.getElementById('last-update').textContent = '🔄 Mise à jour auto · dernière donnée : ' + d.toLocaleTimeString('fr-FR');
       })
@@ -254,11 +270,85 @@ const LOGO_RIGHT_URL = 'https://lh3.googleusercontent.com/rd-d/ALs6j_FgjmA0rCzx_
     return terrainRank(a.location) - terrainRank(b.location);
   }
 
+  let finaleView = 'chrono';
+  function switchFinaleView(v) {
+    finaleView = v;
+    document.getElementById('finale-chrono').classList.toggle('hidden', v !== 'chrono');
+    document.getElementById('finale-tableau').classList.toggle('hidden', v !== 'tableau');
+    document.querySelectorAll('.finale-view-btn').forEach(b => {
+      const active = b.dataset.finaleView === v;
+      b.classList.toggle('bg-pastis-500', active);
+      b.classList.toggle('text-navy-900', active);
+      b.classList.toggle('font-black', active);
+      b.classList.toggle('text-gray-400', !active);
+    });
+  }
+
+  // Structure des 3 tableaux de la phase finale (par id de match ou par nom de phase)
+  const BRACKET_DEFS = [
+    { title: '🏆 Tableau Principal', rounds: [
+        { label: 'Quarts de finale', ids: ['QF1', 'QF2', 'QF3', 'QF4'] },
+        { label: 'Demi-finales', ids: ['DP1', 'DP2'] },
+        { label: 'Finale', phases: ['Finale'] },
+        { label: 'Petite finale (3e place)', phases: ['Petite finale'] }
+    ]},
+    { title: '🥈 Tableau Consolante', rounds: [
+        { label: 'Barrages', ids: ['BAR1', 'BAR2'] },
+        { label: 'Demi conso', ids: ['DC1', 'DC2'] },
+        { label: 'Finale conso', phases: ['Finale conso'] },
+        { label: 'Petite finale conso', phases: ['Petite finale conso'] }
+    ]},
+    { title: '📊 Classement', rounds: [
+        { label: 'Classement (5e à 8e)', phases: ['Classement'] },
+        { label: 'Classement conso', phases: ['Classement conso'] }
+    ]}
+  ];
+
+  function renderFinaleTableau() {
+    const el = document.getElementById('finale-tableau');
+    const matches = appData.planning.filter(m => m.phase);
+    if (!matches.length) { el.innerHTML = "<p class=\"text-center text-gray-500 italic mt-10\">La phase finale n'est pas encore définie.</p>"; return; }
+
+    const byId = {};
+    matches.forEach(m => { if (m.id) byId[m.id] = m; });
+
+    let html = '';
+    BRACKET_DEFS.forEach(bracket => {
+      let bracketHtml = '';
+      const visibleRounds = bracket.rounds.map(round => {
+        let ms = [];
+        if (round.ids) ms = round.ids.map(id => byId[id]).filter(Boolean);
+        else if (round.phases) ms = matches.filter(m => round.phases.includes(m.phase));
+        return { label: round.label, ms };
+      }).filter(r => r.ms.length);
+
+      visibleRounds.forEach((round, i) => {
+        bracketHtml += `<div>
+          <div class="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-1.5 text-center">${round.label}</div>
+          <div class="space-y-2">${round.ms.map(matchCard).join('')}</div>
+        </div>`;
+        if (i < visibleRounds.length - 1) {
+          bracketHtml += `<div class="flex justify-center text-pastis-500 text-xl">↓</div>`;
+        }
+      });
+
+      if (bracketHtml) {
+        html += `<div class="mb-6 space-y-2">
+          <h3 class="font-oswald font-black uppercase tracking-wide text-sm text-pastis-500 mb-1 text-center border-b border-navy-700 pb-2">${bracket.title}</h3>
+          ${bracketHtml}
+        </div>`;
+      }
+    });
+    el.innerHTML = html || '<p class="text-center text-gray-500 italic mt-10">Rien à afficher pour le moment.</p>';
+  }
+
   function renderAll() {
     buildJourneeMap();
     renderPlanning();
     renderGroupes();
     renderFinale();
+    renderFinaleTableau();
+    switchFinaleView(finaleView);
     populateEquipeSelect();
     renderEquipe();
   }
@@ -404,7 +494,7 @@ const LOGO_RIGHT_URL = 'https://lh3.googleusercontent.com/rd-d/ALs6j_FgjmA0rCzx_
   // Phase finale : regroupée par HEURE (comme demandé), le tour/phase apparaît
   // comme étiquette sur chaque carte plutôt qu'en titre de section.
   function renderFinale() {
-    const el = document.getElementById('view-finale');
+    const el = document.getElementById('finale-chrono');
     const matches = appData.planning.filter(m => m.phase);
     if (!matches.length) { el.innerHTML = "<p class=\"text-center text-gray-500 italic mt-10\">La phase finale n'est pas encore définie.</p>"; return; }
 
